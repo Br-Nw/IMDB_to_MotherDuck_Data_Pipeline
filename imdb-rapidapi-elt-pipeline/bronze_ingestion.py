@@ -53,15 +53,21 @@ def load_imdb_data(x_rapidapi_key, motherduck_token):
         # Establishes a connection to MotherDuck.
 
                 con.sql('''
+                BEGIN TRANSACTION;
+
                         CREATE DATABASE IF NOT EXISTS imdb_analytics;
 
                         CREATE SCHEMA IF NOT EXISTS imdb_analytics.bronze;
                         CREATE SCHEMA IF NOT EXISTS imdb_analytics.silver;
                         CREATE SCHEMA IF NOT EXISTS imdb_analytics.gold;
+                        
+                        USE imdb_analytics;
+                        USE bronze;
 
-                        CREATE OR REPLACE TABLE
-                                imdb_analytics.bronze.raw_movie_data AS
-                        SELECT * FROM raw_movie_df;  
+                        CREATE OR REPLACE TABLE raw_movie_data AS
+                        SELECT * FROM raw_movie_df; 
+
+                COMMIT; 
                 ''')
 
                 # Creates imdb_analytics database if it does not already exist.
@@ -76,21 +82,29 @@ def load_imdb_data(x_rapidapi_key, motherduck_token):
                 # INGESTION METADATA
                 # --------------------------------------------------------------------
                 con.sql('''
-                CREATE SEQUENCE IF NOT EXISTS imdb_analytics.bronze.ingestion_id_seq START 1;
 
-                CREATE TABLE IF NOT EXISTS imdb_analytics.bronze.ingestion_metadata (
-                load_id INTEGER DEFAULT nextval('ingestion_id_seq') PRIMARY KEY,
-                source VARCHAR,
-                loaded_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-                row_count INTEGER
-                );
+                USE imdb_analytics;
+                USE bronze;
 
-                INSERT INTO imdb_analytics.bronze.ingestion_metadata (source, row_count)
-                VALUES 
-                (
-                'IMDb RapidAPI',
-                (SELECT COUNT(*) FROM imdb_analytics.bronze.raw_movie_data)
-                );
+                BEGIN TRANSACTION;
+                
+                        CREATE OR REPLACE SEQUENCE ingestion_id_seq START 1;
+
+                        CREATE TABLE IF NOT EXISTS ingestion_metadata (
+                        load_id INTEGER DEFAULT nextval('ingestion_id_seq') PRIMARY KEY,
+                        source VARCHAR,
+                        loaded_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+                        row_count INTEGER
+                        );
+
+                        INSERT INTO ingestion_metadata (source, row_count)
+                        VALUES 
+                        (
+                        'IMDb RapidAPI',
+                        (SELECT COUNT(*) FROM raw_movie_data)
+                        );
+                
+                COMMIT;
                 ''')
                 # Creates a table containing metadata about the ingested movie data,
                 # including the data source, ingestion timestamp, and number of rows loaded.
