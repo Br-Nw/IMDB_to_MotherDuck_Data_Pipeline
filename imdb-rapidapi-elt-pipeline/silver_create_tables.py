@@ -5,76 +5,96 @@ import datetime
 def create_silver_tables(motherduck_token):
     with duckdb.connect(f'md:?motherduck_token={motherduck_token}') as con:
         con.sql(''' 
-        
-        USE imdb_analytics;
-        USE silver;
 
-        BEGIN TRANSACTION;
+            USE imdb_analytics;
+            USE silver;
 
-            CREATE OR REPLACE TABLE directors (
-            id INTEGER PRIMARY KEY,
-            director VARCHAR UNIQUE
-            );
+            BEGIN TRANSACTION;
 
-            CREATE OR REPLACE TABLE certificates (
-            id INTEGER PRIMARY KEY,
-            certificate VARCHAR UNIQUE
-            );
+                DROP TABLE IF EXISTS media_genres;
+                DROP TABLE IF EXISTS media_stars;
+                DROP TABLE IF EXISTS imdb_ranked_media;
+                DROP TABLE IF EXISTS genres;
+                DROP TABLE IF EXISTS stars;
+                DROP TABLE IF EXISTS certificates;
+                DROP TABLE IF EXISTS directors;
 
-            CREATE OR REPLACE TABLE stars (
-            id INTEGER PRIMARY KEY,
-            star VARCHAR UNIQUE
-            );
+                DROP SEQUENCE IF EXISTS genre_id_seq;
+                DROP SEQUENCE IF EXISTS star_id_seq;
+                DROP SEQUENCE IF EXISTS certificate_id_seq;
+                DROP SEQUENCE IF EXISTS director_id_seq;
+                
+                CREATE SEQUENCE director_id_seq START 1;
 
-            CREATE OR REPLACE TABLE genres (
-            id INTEGER PRIMARY KEY,
-            genre VARCHAR UNIQUE    
-            );
+                CREATE TABLE directors (
+                id INTEGER DEFAULT nextval('director_id_seq') PRIMARY KEY,
+                director VARCHAR UNIQUE
+                );
 
-            CREATE OR REPLACE TABLE imdb_ranked_media (
-            id INTEGER PRIMARY KEY, 
-            rank INTEGER,
-            title VARCHAR,
-            released_year INTEGER,
-            poster_link VARCHAR,
-            certificate_id INTEGER,
-            runtime_minutes INTEGER,
-            imdb_rating DECIMAL(2, 1),
-            overview VARCHAR,
-            meta_score INTEGER,
-            director_id INTEGER,
-            no_of_votes INTEGER,
-            gross_revenue_usd INTEGER,
+                CREATE SEQUENCE certificate_id_seq START 1;
 
-            FOREIGN KEY (certificate_id) REFERENCES certificates(id),
-            FOREIGN KEY (director_id) REFERENCES directors(id)
-            );
+                CREATE TABLE certificates (
+                id INTEGER DEFAULT nextval('certificate_id_seq') PRIMARY KEY,
+                certificate VARCHAR UNIQUE
+                );
 
-            CREATE OR REPLACE TABLE media_stars (
-            media_id INTEGER,
-            star_id INTEGER,
+                CREATE SEQUENCE star_id_seq START 1;
 
-            PRIMARY KEY (media_id, star_id),
-            FOREIGN KEY (media_id) REFERENCES imdb_ranked_media(id),
-            FOREIGN KEY (star_id) REFERENCES stars(id)
-            );
+                CREATE TABLE stars (
+                id INTEGER DEFAULT nextval('star_id_seq') PRIMARY KEY,
+                star VARCHAR UNIQUE
+                );
 
-            CREATE OR REPLACE TABLE media_genres (
-            media_id INTEGER,
-            genre_id INTEGER,
+                CREATE SEQUENCE genre_id_seq START 1;
 
-            PRIMARY KEY (media_id, genre_id),
-            FOREIGN KEY (media_id) REFERENCES imdb_ranked_media(id),
-            FOREIGN KEY (genre_id) REFERENCES genres(id)
-            );
+                CREATE TABLE genres (
+                id INTEGER DEFAULT nextval('genre_id_seq') PRIMARY KEY,
+                genre VARCHAR UNIQUE    
+                );
 
-        COMMIT;
+                CREATE TABLE imdb_ranked_media (
+                id INTEGER PRIMARY KEY, 
+                rank INTEGER,
+                title VARCHAR,
+                released_year INTEGER,
+                poster_link VARCHAR,
+                certificate_id INTEGER,
+                runtime_minutes INTEGER,
+                imdb_rating DECIMAL(2, 1),
+                overview VARCHAR,
+                meta_score INTEGER,
+                director_id INTEGER,
+                no_of_votes INTEGER,
+                gross_revenue_usd INTEGER,
+
+                FOREIGN KEY (certificate_id) REFERENCES certificates(id),
+                FOREIGN KEY (director_id) REFERENCES directors(id)
+                );
+
+                CREATE TABLE media_stars (
+                media_id INTEGER,
+                star_id INTEGER,
+
+                PRIMARY KEY (media_id, star_id),
+                FOREIGN KEY (media_id) REFERENCES imdb_ranked_media(id),
+                FOREIGN KEY (star_id) REFERENCES stars(id)
+                );
+
+                CREATE TABLE media_genres (
+                media_id INTEGER,
+                genre_id INTEGER,
+
+                PRIMARY KEY (media_id, genre_id),
+                FOREIGN KEY (media_id) REFERENCES imdb_ranked_media(id),
+                FOREIGN KEY (genre_id) REFERENCES genres(id)
+                );
+
+            COMMIT;
         ''')
 
         timestamp = datetime.datetime.now(datetime.timezone.utc)
         # Records the time at which the data was successfully loaded.
         # Timestamp is in UTC.
 
-        return  (
-                f"\n===| ALL SILVER LAYER TABLES CREATED AT {timestamp} UTC |===\n\n"
-                )
+        return (f"\n===| ALL SILVER LAYER TABLES CREATED AT {timestamp} UTC |===\n\n")
+        # Returns a simple pipeline status message indicating that all silver layer tables have been created.

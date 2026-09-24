@@ -50,7 +50,6 @@ def load_imdb_data(x_rapidapi_key, motherduck_token):
         # --------------------------------------------------------------------
     
         with duckdb.connect(f'md:?motherduck_token={motherduck_token}') as con: 
-        # Establishes a connection to MotherDuck.
 
                 con.sql('''
                 BEGIN TRANSACTION;
@@ -88,13 +87,13 @@ def load_imdb_data(x_rapidapi_key, motherduck_token):
 
                 BEGIN TRANSACTION;
                 
-                        CREATE OR REPLACE SEQUENCE ingestion_id_seq START 1;
+                        CREATE SEQUENCE IF NOT EXISTS ingestion_id_seq START 1;
 
                         CREATE TABLE IF NOT EXISTS ingestion_metadata (
-                        load_id INTEGER DEFAULT nextval('ingestion_id_seq') PRIMARY KEY,
-                        source VARCHAR,
-                        loaded_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-                        row_count INTEGER
+                                load_id INTEGER DEFAULT nextval('ingestion_id_seq') PRIMARY KEY,
+                                source VARCHAR,
+                                loaded_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+                                row_count INTEGER
                         );
 
                         INSERT INTO ingestion_metadata (source, row_count)
@@ -118,5 +117,5 @@ def load_imdb_data(x_rapidapi_key, motherduck_token):
                 f"===| DATABASE, MEDALLION SCHEMA AND MOVIE DATA "
                 f"LOADED INTO BRONZE LAYER AT {timestamp} UTC |==="
         )
-        # Return a simple pipeline status message showing that the API request
+        # Returns a simple pipeline status message showing that the API request
         # succeeded and the data was loaded into the Bronze layer.
