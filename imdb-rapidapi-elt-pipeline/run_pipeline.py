@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import os
 from bronze_ingestion import load_imdb_data
 from silver_create_tables import create_silver_tables
+from silver_load_into_tables import load_silver_lookup_tables
 
 # CONFIGURATION
 # --------------------------------------------------------------------
@@ -20,3 +21,7 @@ print(load_imdb_data(x_rapidapi_key, motherduck_token))
 # STEP 2: CREATE TABLES IN SILVER LAYER
 # --------------------------------------------------------------------
 print(create_silver_tables(motherduck_token))
+
+# STEP 3: LOAD DATA INTO SILVER LAYER TABLES
+# --------------------------------------------------------------------
+print(load_silver_lookup_tables(motherduck_token))

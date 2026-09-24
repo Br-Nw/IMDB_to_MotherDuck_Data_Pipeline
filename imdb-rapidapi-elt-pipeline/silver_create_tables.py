@@ -96,5 +96,5 @@ def create_silver_tables(motherduck_token):
         # Records the time at which the data was successfully loaded.
         # Timestamp is in UTC.
 
-        return (f"\n===| ALL SILVER LAYER TABLES CREATED AT {timestamp} UTC |===\n\n")
+        return (f"\n===| ALL SILVER LAYER TABLES CREATED AT {timestamp} UTC |===\n")
         # Returns a simple pipeline status message indicating that all silver layer tables have been created.
