@@ -41,7 +41,7 @@ def load_imdb_data(x_rapidapi_key, motherduck_token):
 
         response.raise_for_status() # Raises an exception if the API returns an unsuccessful HTTP status code.
 
-        raw_movie_df = pd.DataFrame.from_dict(response.json())
+        raw_media_df = pd.DataFrame.from_dict(response.json())
 
         # Converts the API JSON response into a Pandas DataFrame
         # for loading into the Bronze layer.
@@ -63,8 +63,8 @@ def load_imdb_data(x_rapidapi_key, motherduck_token):
                         USE imdb_analytics;
                         USE bronze;
 
-                        CREATE OR REPLACE TABLE raw_movie_data AS
-                        SELECT * FROM raw_movie_df; 
+                        CREATE OR REPLACE TABLE raw_ranked_media_data AS
+                        SELECT * FROM raw_media_df; 
 
                 COMMIT; 
                 ''')
@@ -76,7 +76,7 @@ def load_imdb_data(x_rapidapi_key, motherduck_token):
                 # Silver = cleaned/transformed data
                 # Gold   = analytics-ready data
 
-                # Then creates or replaces the raw movie table in the Bronze layer.
+                # Then creates or replaces the raw ranked_media table in the Bronze layer.
 
                 # INGESTION METADATA
                 # --------------------------------------------------------------------
@@ -100,12 +100,12 @@ def load_imdb_data(x_rapidapi_key, motherduck_token):
                         VALUES 
                         (
                         'IMDb RapidAPI',
-                        (SELECT COUNT(*) FROM raw_movie_data)
+                        (SELECT COUNT(*) FROM raw_ranked_media_data)
                         );
                 
                 COMMIT;
                 ''')
-                # Creates a table containing metadata about the ingested movie data,
+                # Creates a table containing metadata about the ingested ranked media data,
                 # including the data source, ingestion timestamp, and number of rows loaded.
                 
                 timestamp = datetime.datetime.now(datetime.timezone.utc)
@@ -114,7 +114,7 @@ def load_imdb_data(x_rapidapi_key, motherduck_token):
 
         return (
                 f"\n===| HTTP STATUS CODE: {response.status_code} |===\n\n"
-                f"===| DATABASE, MEDALLION SCHEMA AND MOVIE DATA "
+                f"===| DATABASE, MEDALLION SCHEMA, MOVIE & SERIES DATA "
                 f"LOADED INTO BRONZE LAYER AT {timestamp} UTC |==="
         )
         # Returns a simple pipeline status message showing that the API request

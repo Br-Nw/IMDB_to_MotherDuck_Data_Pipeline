@@ -23,6 +23,7 @@ def create_silver_tables(motherduck_token):
                 DROP SEQUENCE IF EXISTS star_id_seq;
                 DROP SEQUENCE IF EXISTS certificate_id_seq;
                 DROP SEQUENCE IF EXISTS director_id_seq;
+                DROP SEQUENCE IF EXISTS imdb_ranked_media_id_seq;
                 
                 CREATE SEQUENCE director_id_seq START 1;
 
@@ -52,8 +53,10 @@ def create_silver_tables(motherduck_token):
                 genre VARCHAR UNIQUE    
                 );
 
+                CREATE SEQUENCE imdb_ranked_media_id_seq START 1;
+
                 CREATE TABLE imdb_ranked_media (
-                id INTEGER PRIMARY KEY, 
+                id INTEGER DEFAULT nextval('imdb_ranked_media_id_seq') PRIMARY KEY, 
                 rank INTEGER,
                 title VARCHAR,
                 released_year INTEGER,
@@ -97,4 +100,3 @@ def create_silver_tables(motherduck_token):
         # Timestamp is in UTC.
 
         return (f"\n===| ALL SILVER LAYER TABLES CREATED AT {timestamp} UTC |===\n")
-        # Returns a simple pipeline status message indicating that all silver layer tables have been created.
