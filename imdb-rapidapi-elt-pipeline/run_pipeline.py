@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import os
 from bronze_ingestion import load_imdb_data
 from silver_create_tables import create_silver_tables
-from silver_load_into_tables import load_silver_lookup_tables, load_silver_fact_table
+from silver_load_into_tables import load_silver_lookup_tables, load_silver_fact_table, load_silver_bridge_tables
 
 # CONFIGURATION
 # --------------------------------------------------------------------
@@ -26,3 +26,4 @@ print(create_silver_tables(motherduck_token))
 # --------------------------------------------------------------------
 print(load_silver_lookup_tables(motherduck_token))
 print(load_silver_fact_table(motherduck_token))
+print(load_silver_bridge_tables(motherduck_token))

@@ -88,6 +88,10 @@ def load_silver_lookup_tables(motherduck_token):
 
 
 
+
+
+
+
 def load_silver_fact_table(motherduck_token):
 
     with duckdb.connect(f'md:?motherduck_token={motherduck_token}') as con:
@@ -234,3 +238,136 @@ def load_silver_fact_table(motherduck_token):
         # Timestamp is in UTC.
 
         return (f"===| IMDB RANKED MEDIA DATA LOADED INTO SILVER LAYER AT {timestamp} UTC |===\n")
+
+
+
+
+
+
+def load_silver_bridge_tables(motherduck_token):
+
+    with duckdb.connect(f'md:?motherduck_token={motherduck_token}') as con:
+
+        raw_ranked_media_df = con.sql("SELECT * FROM imdb_analytics.bronze.raw_ranked_media_data;").df() # Nested bronze data loaded as a DataFrame from motherduck
+        
+        media_df = pd.DataFrame.from_dict(list(raw_ranked_media_df["result"])) # Extracted Dataframe from nested JSON DataFrame
+        
+        media_df["id"] = media_df.index + 1 
+        # applies the same surrogate id key as implemented in motherduck through sequences.
+        # used later in comparison to motherduck id key
+
+        imdb_ranked_media_df = con.sql('''
+                            USE imdb_analytics;
+                            USE silver;
+
+                            SELECT * FROM imdb_ranked_media;
+                            ''').df()
+
+        genres_df = con.sql('''
+                            USE imdb_analytics;
+                            USE silver;
+                            
+                            SELECT * FROM genres;
+                            ''').df()
+
+        stars_df = con.sql('''
+                            USE imdb_analytics;
+                            USE silver;
+
+                            SELECT * FROM stars;
+                            ''').df()
+        
+        # Creating and Cleaning the media_genres DataFrame
+        media_genres_df = pd.DataFrame()
+        media_id_list_1 = []
+        genre_id_list = []
+
+        media_stars_df = pd.DataFrame()
+        media_id_list_2 = []
+        star_id_list = []
+
+        for i in range(len(media_df)):
+                
+            imdb_ranked_media_id = int(imdb_ranked_media_df[imdb_ranked_media_df["id"] == media_df.iloc[i]["id"]]["id"].iloc[0])
+    
+            # This section of the code iterates over each record in media_df, finds its equivalent id 
+            # in imdb_ranked_media_df then checks to see if its genre field is not NULL. If the genre field is NULL,
+            # it will pass that record. If the genre field is not NULL it will append both the record's imdb_ranked_media_id
+            # and genre_id to synchronised lists that are used to populate media_genres_df.
+            
+            if pd.isna(media_df.iloc[i]["Genre"]):
+                pass
+            
+            else:
+                genre_list = media_df.iloc[i]["Genre"].split(", ")
+                
+                for genre in genre_list:
+                    genre_id = int(genres_df[genres_df["genre"] == genre]["id"].iloc[0])
+                    
+                    media_id_list_1.append(imdb_ranked_media_id)
+                    genre_id_list.append(genre_id)
+    
+            # This section of the code creates a list containing each record's four stars,
+            # then checks each star to see if it is not NULL. If the star is NULL, it will pass that record. 
+            # If the star is not NULL, it will append both the record's
+            # imdb_ranked_media_id and star_id to synchronised lists that are used to
+            # populate media_stars_df.
+    
+            stars_list = [media_df.iloc[i]["Star1"], media_df.iloc[i]["Star2"], media_df.iloc[i]["Star3"], media_df.iloc[i]["Star4"]]
+            
+            for star in stars_list:
+    
+                if pd.isna(star):
+                    pass
+    
+                else:
+                    star_id = int(stars_df[stars_df["star"] == star]["id"].iloc[0])      
+                    
+                    media_id_list_2.append(imdb_ranked_media_id)
+                    star_id_list.append(star_id)
+    
+    
+        media_genres_df["media_id"] = media_id_list_1
+        media_genres_df["genre_id"] = genre_id_list
+    
+        media_stars_df["media_id"] = media_id_list_2
+        media_stars_df["star_id"] = star_id_list
+    
+        # Removing Duplicate records from data frames
+        media_genres_df.drop_duplicates(subset=["media_id", "genre_id"], inplace=True)
+        media_stars_df.drop_duplicates(subset=["media_id", "star_id"], inplace=True)
+    
+        # Inserting the cleaned media_genre and media_star data into the silver database tables
+        con.sql(''' 
+    
+        USE imdb_analytics;
+        USE silver;
+        
+        BEGIN TRANSACTION;
+    
+        ''')
+    
+        con.register("media_genres_data", media_genres_df)
+        con.register("media_stars_data", media_stars_df)
+    
+        con.sql('''
+        INSERT INTO media_genres(media_id, genre_id)
+    
+        SELECT media_id, genre_id 
+        FROM media_genres_data;
+        ''')
+    
+        con.sql('''
+        INSERT INTO media_stars(media_id, star_id)
+        
+        SELECT media_id, star_id 
+        FROM media_stars_data;
+        ''')
+        
+        con.sql("COMMIT;")
+
+    timestamp = datetime.datetime.now(datetime.timezone.utc)
+    # Records the time at which the data was successfully loaded.
+    # Timestamp is in UTC.
+    
+    return (f"===| MEDIA_STARS AND MEDIA_GENRES BRIDGE TABLES LOADED INTO SILVER LAYER AT {timestamp} UTC |===\n")
