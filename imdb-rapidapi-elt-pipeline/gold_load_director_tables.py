@@ -15,8 +15,10 @@ def load_gold_director_tables(motherduck_token):
         
     # -- CREATES DIRECTORS DIMENSION TABLE --
         con.sql(""" 
-       
-            CREATE OR REPLACE TABLE directors (
+            DROP TABLE IF EXISTS director_metrics;
+            DROP TABLE IF EXISTS directors;
+
+            CREATE TABLE directors (
                 id INTEGER PRIMARY KEY,
                 director VARCHAR
             );
@@ -35,7 +37,7 @@ def load_gold_director_tables(motherduck_token):
     # -- CREATES DIRECTOR METRICS TABLE --
         con.sql("""
         
-        CREATE OR REPLACE TABLE director_metrics (
+        CREATE TABLE director_metrics (
             director_id INTEGER PRIMARY KEY,
             mean_gross_revenue_usd INTEGER,
             mean_imdb_rating DECIMAL(2, 1),
