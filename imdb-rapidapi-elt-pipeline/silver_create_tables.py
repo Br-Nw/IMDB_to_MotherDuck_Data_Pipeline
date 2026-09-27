@@ -1,5 +1,4 @@
 import duckdb
-from dotenv import load_dotenv
 import datetime
 
 def create_silver_tables(motherduck_token):
