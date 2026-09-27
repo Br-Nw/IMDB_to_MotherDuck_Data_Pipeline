@@ -6,6 +6,7 @@ from bronze_ingestion import load_imdb_data
 from silver_create_tables import create_silver_tables
 from silver_load_into_tables import load_silver_lookup_tables, load_silver_fact_table, load_silver_bridge_tables
 from gold_load_into_flat_mart import load_gold_flat_mart
+from gold_load_director_tables import load_gold_director_tables
 
 # CONFIGURATION
 # --------------------------------------------------------------------
@@ -32,3 +33,4 @@ print(load_silver_bridge_tables(motherduck_token))
 # STEP 4: LOAD DATA INTO GOLD LAYER TABLES
 # --------------------------------------------------------------------
 print(load_gold_flat_mart(motherduck_token))
+print(load_gold_director_tables(motherduck_token))
