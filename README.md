@@ -6,3 +6,5 @@
 ![Pandas](https://img.shields.io/badge/Pandas-Data%20Transformation-150458?logo=pandas)
 ![SQL](https://img.shields.io/badge/SQL-Queries-CC2927?logo=sqlite&logoColor=white)
 ![SQL](https://img.shields.io/badge/SQL-Data%20Transformation-4479A1)
+
+![Database Schema](images/architecture_diagram.png)
