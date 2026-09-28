@@ -19,9 +19,9 @@ The pipeline ingests a raw nested JSON payload into the Bronze layer, normalises
 * **Data extraction:** Retrieves ranked media data via HTTP POST requests from the IMDb RapidAPI endpoint.
 * **Medallion Data Architecture:** Segregates data into Bronze (raw ingestion & metadata), Silver (cleaned, normalized star/snowflake schema & bridge tables), and Gold (analytics-ready metrics & flat marts).
 * **Data modelling:** Designed a normalized schema containing lookup dimension tables (`directors`, `stars`, `genres`, `certificates`), a central fact table (`imdb_ranked_media`), and many-to-many bridge tables (`media_stars`, `media_genres`).
-* **ETL/ELT development:** Implemented automated extraction, cleaning, string unnesting, numeric parsing, surrogate key mapping, and metric aggregations using Python, Pandas, and DuckDB SQL.
+* **ELT development:** Implemented automated extraction, cleaning, string unnesting, numeric parsing, surrogate key mapping, and metric aggregations using Python, Pandas, and DuckDB SQL.
 * **Data integrity:** Implemented primary keys, unique constraints, sequence-based surrogate keys, and foreign keys across transaction-wrapped pipeline steps.
-* **Auditability & Validation:** Automatically tracks ingestion runs with sequence-driven IDs, UTC timestamps, and row counts in a dedicated `ingestion_metadata` table.
+* **Validation:** Automatically tracks ingestion runs with sequence-driven IDs, UTC timestamps, and row counts in a dedicated `ingestion_metadata` table.
 * **Automation:** Uses a master orchestration script (`run_pipeline.py`) to execute all pipeline functions sequentially.
 * **Analytics-ready delivery:** Exposes a read-only MotherDuck database share and pre-aggregated director and genre metrics tables.
 
@@ -62,8 +62,6 @@ The pipeline creates a central `imdb_ranked_media` fact table connected to relat
 ---
 
 # 🏗️ Pipeline Architecture
-
-The pipeline processes data through a three-tier Medallion Data Architecture:
 
 ![Database architecture](images/architecture_diagram.png)
 
@@ -297,21 +295,6 @@ ATTACH 'md:_share/imdb_analytics_for_viewers/19a9b5f7-1b71-4360-8b4d-978a5942f65
 * Public read-only data sharing via MotherDuck shares
 
 
-# 🎯 Project Outcomes
-
-The completed pipeline provides a well structured data engineering workflow for transforming raw IMDb top 1000 data into a Medallion Architecture on MotherDuck.
-
-The system provides:
-
-* A repeatable, single-command ELT workflow (`run_pipeline.py`)
-* Reduced data duplication via normalized entity tables and bridge tables
-* Audit history tracking via `ingestion_metadata`
-* Pre-aggregated metrics for directors and genres in the Gold layer
-* A denormalized flat data mart optimized for analytical queries
-* Shared cloud database access via MotherDuck
-
-
 # ⛔ Project Limitations
 
-* **API Limits:** Dependent on RapidAPI rate limits and schema stability.
-* **Local In-Memory Overhead:** Initial DataFrame unnesting for stars and genres is processed in Python memory before being registered and committed to MotherDuck.
+* Orchestration: The `run_pipeline.py` file must be manually run instead of automatically scheduled using an orchestrator like Airflow.
