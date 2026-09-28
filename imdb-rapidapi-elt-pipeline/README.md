@@ -19,4 +19,4 @@ To query the database directly in **MotherDuck**, first attach the shared databa
 ```sql
 ATTACH 'md:_share/imdb_analytics_for_viewers/19a9b5f7-1b71-4360-8b4d-978a5942f65f';
 ```
-This shared database is read-only. You can run queries to explore and analyse the data, but you cannot modify the database or its tables.
+*(Note: This shared database instance is read-only for external analytical exploration).*

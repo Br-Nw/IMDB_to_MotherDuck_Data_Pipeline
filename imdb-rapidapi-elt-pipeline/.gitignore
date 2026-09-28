@@ -27,4 +27,3 @@ __pycache__/
 
 # 🛠️ Used to test sections of code
 test_env.ipynb
-01_bronze_exploration.ipynb
